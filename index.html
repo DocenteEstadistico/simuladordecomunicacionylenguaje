@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>MaIAnEspañol 10° - Simulador de Español</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; background-color: #f5f5f5; }
+    header { text-align: center; margin-bottom: 20px; }
+    header h1 { margin: 0; font-size: 2em; color: #333; }
+    header p { font-size: 1em; color: #555; }
+    .passage { background: #fffef6; padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #f0ad4e; color:#333; }
+    .question { margin-bottom: 18px; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.06); }
+    .result { font-weight: bold; font-size: 1.2em; margin-top: 20px; text-align: center; }
+    button { padding: 10px 15px; margin-top: 10px; font-weight: bold; cursor: pointer; border-radius: 5px; border: none; background-color: #007bff; color: white; }
+    button:hover { background-color: #0056b3; }
+    .hidden { display: none; }
+    .correct { background-color: #d4edda; border-left: 5px solid #28a745; }
+    .incorrect { background-color: #f8d7da; border-left: 5px solid #dc3545; }
+    #timer { font-weight: bold; font-size: 1.1em; color: #b30000; text-align: center; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MaIAnEspañol - 10° Grado</h1>
+    <p>Simulador Diagnóstico de Español - Décimo Grado<br>Dispones de 20 minutos para resolver el test.</p>
+  </header>
+
+  <div style="text-align:center; margin-bottom:10px;">
+    <button id="startBtn" onclick="loadTest()">Iniciar Simulador de Idioma Español</button>
+  </div>
+
+  <div id="timer"></div>
+
+  <form id="testForm" class="hidden" onsubmit="return gradeTest(event)">
+    <div id="questions"></div>
+    <div style="text-align:center;">
+      <button type="submit">Enviar Respuestas</button>
+    </div>
+  </form>
+  <div class="result" id="result"></div>
+
+  <script>
+    const tests = {
+      espanol10: [
+        {
+          passage: `LA ANTÁRTIDA
+La Antártida no es en absoluto un desierto... Goff estuvo en el Museo de la Ciencia de Barcelona para hablar de la vida en condiciones extremas.`,
+          q: "¿Qué se encuentra entre los hielos de la Antártida?",
+          options: ["Muchísimas especies de seres vivos.","Muestras de animales extinguidos.","Diferentes variedades de minerales.","Restos de embarcaciones antiguas."],
+          answer: 0
+        },
+        { q: "Según el texto, ¿por qué se conserva la vida bacteriana en ese lugar?", options: ["Porque su reproducción es lenta.","Porque nadie las destruye.","Porque crecen en laboratorios.","Porque carecen de luz solar."], answer: 1 },
+        { q: "“…para hablar de la vida en condiciones extremas.” ¿Qué significa la palabra extremas en el texto?", options: ["Parecidas","Mejores","Difíciles","Actuales"], answer: 2 },
+        { q: "“…el estudio de la misma puede ayudar a develar la existencia de vida…” ¿Qué significa la palabra develar en el texto?", options: ["Transmitir","Descubrir","Terminar","Delimitar"], answer: 1 },
+
+        {
+          passage: `¿Le da miedo hablar en público?... Se trata de adquirir confianza en usted mismo y sentir que es capaz de hacerlo.`,
+          q: "¿Qué significa la palabra adquirir en el texto?",
+          options: ["Convertir","Utilizar","Permitir","Lograr"],
+          answer: 3
+        },
+        { q: "¿De qué trata el texto?", options: ["De una escena teatral.","De la vida de un artista.","De un desfile de modas.","De una fiesta de disfraces."], answer: 1 },
+
+        {
+          passage: `Los derechos humanos son inherentes a las personas. Nacemos con ellos...`,
+          q: "“Los derechos humanos son inherentes a las personas.” ¿Qué significa la palabra inherentes en el texto?",
+          options: ["Recomendables","Flexibles","Inseparables","Manejables"],
+          answer: 2
+        },
+
+        {
+          passage: `Tomé la bolsa de red, las botellas vacías... Los jóvenes ordeñaban las vacas.`,
+          q: "¿Qué hace Andrés?",
+          options: ["Fabrica corchos.","Atiende un rebaño.","Visita a un amigo.","Compra leche."],
+          answer: 1
+        },
+
+        {
+          passage: `La señora estaba sentada en el corredor, meciéndose en una silla de mimbre... trajo una sonrisa a su cara.`,
+          q: "Según el texto, ¿qué motivó la sonrisa de la señora?",
+          options: ["La comodidad de la silla mecedora.","Las caricias de la brisa del mar.","El agradable ruido de las olas.","La llegada de las visitas al puerto."],
+          answer: 1
+        },
+
+        {
+          passage: `Veíase en él, al instante, al caballero pulcro y distinguido... Profesaba la medicina por voluntad.`,
+          q: "¿A qué se dedicaba el personaje de la historia?",
+          options: ["A cuidar la salud de las personas.","Al aseo de vestimentas.","A dirigir un grupo de estudiantes.","Al cultivo de algodón."],
+          answer: 0
+        },
+
+        {
+          passage: `Entusiasmado con estos recuerdos... el sol ya tenía sueño y la luna había madrugado.`,
+          q: "¿Qué significa la frase 'el sol ya tenía sueño' en el texto?",
+          options: ["El sol resplandecía.","El sol calentaba.","El sol se imponía.","El sol se ocultaba."],
+          answer: 3
+        },
+
+        {
+          passage: `Manuel lee una revista y felicita a los editores...`,
+          q: "¿Por qué Manuel felicita a los editores de la revista?",
+          options: ["Porque la revista es barata.","Porque es amigo del autor.","Porque le interesó el tema.","Porque tiene nuevo diseño."],
+          answer: 2
+        },
+
+        {
+          passage: `El día previo a su viaje deje preparado todo... De esa manera si las maletas se pierden, los problemas serán menores.`,
+          q: "Según el texto, ¿por qué lo importante se lleva en una maleta de mano?",
+          options: ["Porque se evita una pérdida.","Porque los gastos son menores.","Por la cantidad de horas de vuelo.","Por las normas del aeropuerto."],
+          answer: 0
+        },
+
+        {
+          passage: `La computadora es una máquina electrónica capaz de ordenar... es indispensable contar con una herramienta que permita manejar información.`,
+          q: "“… propio de esta época de crecimiento tecnológico…” ¿Qué significa la palabra crecimiento en el texto?",
+          options: ["Conocimiento","Avance","Requerimiento","Esfuerzo"],
+          answer: 1
+        },
+
+        {
+          passage: `EL VIOLINISTA - El joven subió al estrado... “cuánta música podemos producir con lo que nos queda”.`,
+          q: "¿De qué trata el texto?",
+          options: ["De una escena de teatro.","De un concierto al aire libre.","De la actitud de un artista.","De la historia de la música."],
+          answer: 2
+        },
+        { q: "¿Qué complicaba al personaje para situarse en el escenario?", options: ["La aglomeración de público.","El peso de los instrumentos.","El gran tamaño del salón.","La dificultad para caminar."], answer: 3 },
+        { q: "¿Cómo se comportaba la gente cuando él se dirigía al estrado?", options: ["Permanecía en silencio.","Se movía impacientemente.","Conversaban unos con otros.","Se mostraba distraída."], answer: 0 },
+        { q: "“Hasta ahora, la audiencia ya estaba acostumbrada a este ritual.” ¿Qué significa la palabra audiencia en el texto?", options: ["Presentación","Orquesta","Concurrencia","Aclamación"], answer: 2 },
+
+        {
+          passage: `19. Alberto muy preocupado pregunta...`,
+          q: "¿Qué palabra o frase hace falta para completar el texto?",
+          options: ["Puede que","A lo mejor","En cuanto","Ojalá"],
+          answer: 1
+        },
+
+        {
+          passage: `20. Hola Jaime, has cumplido con tu trabajo todos los días... estoy como si me _______ un enorme peso de encima.`,
+          q: "¿Qué palabra hace falta para completar el texto?",
+          options: ["quitaran","han quitado","quitaron","hubieran quitado"],
+          answer: 0
+        }
+      ]
+    };
+
+    let timeLeft = 1200; // 20 minutos
+    let timer = null;
+
+    function startTimer() {
+      const timerDisplay = document.getElementById('timer');
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          timer = null;
+          gradeTestAuto();
+          return;
+        }
+        let m = Math.floor(timeLeft/60);
+        let s = timeLeft%60;
+        timerDisplay.innerText = `⏰ Tiempo restante: ${m}:${s<10?'0':''}${s}`;
+        timeLeft--;
+      },1000);
+    }
+
+    function loadTest(){
+      document.getElementById('startBtn').disabled=true;
+      const qs = tests.espanol10;
+      const container=document.getElementById('questions');
+      const form=document.getElementById('testForm');
+      container.innerHTML='';
+      qs.forEach((q,i)=>{
+        if(q.passage){
+          const pdiv=document.createElement('div');
+          pdiv.className='passage';
+          pdiv.innerHTML=`${q.passage.replace(/\n/g,'<br>')}`;
+          container.appendChild(pdiv);
+        }
+        const div=document.createElement('div');
+        div.className='question'; div.id=`q-${i}`;
+        let opts='';
+        q.options.forEach((opt,j)=>{opts+=`<label><input type="radio" name="q${i}" value="${j}"> ${opt}</label><br>`;});
+        div.innerHTML=`<p><b>${i+1}. ${q.q}</b></p>${opts}`;
+        container.appendChild(div);
+      });
+      form.classList.remove('hidden');
+      document.getElementById('result').innerText='';
+      startTimer();
+    }
+
+    function gradeTest(e){e.preventDefault();gradeTestAuto();return false;}
+
+    function gradeTestAuto(){
+      if(timer){clearInterval(timer);timer=null;}
+      const qs=tests.espanol10; let score=0;
+      qs.forEach((q,i)=>{
+        const div=document.getElementById(`q-${i}`);
+        div.classList.remove('correct','incorrect');
+        const sel=document.querySelector(`input[name="q${i}"]:checked`);
+        if(sel){if(parseInt(sel.value)===q.answer){score++;div.classList.add('correct');}else{div.classList.add('incorrect');}}
+        else{div.classList.add('incorrect');}
+      });
+      const total=qs.length; let msg='';
+      if(score>=total*0.9){msg=`¡Excelente! Obtuviste ${score}/${total}`;document.getElementById('result').style.color='#28a745';}
+      else if(score>=total*0.6){msg=`Vas bien, pero puedes mejorar. Obtuviste ${score}/${total}`;document.getElementById('result').style.color='#fd7e14';}
+      else{msg=`Debes seguir practicando. Obtuviste ${score}/${total}`;document.getElementById('result').style.color='#dc3545';}
+      document.getElementById('result').innerText=msg;
+      window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+    }
+  </script>
+</body>
+</html>
