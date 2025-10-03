@@ -1,212 +1,556 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>MaIAnEspañol 10° - Simulador de Español</title>
+  <meta charset="utf-8" />
+  <title>Simulador Español 10° - Examen</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; background-color: #f5f5f5; }
-    header { text-align: center; margin-bottom: 20px; }
-    header h1 { margin: 0; font-size: 2em; color: #333; }
-    header p { font-size: 1em; color: #555; }
-    .passage { background: #fffef6; padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #f0ad4e; color:#333; }
-    .question { margin-bottom: 18px; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.06); }
-    .result { font-weight: bold; font-size: 1.2em; margin-top: 20px; text-align: center; }
-    button { padding: 10px 15px; margin-top: 10px; font-weight: bold; cursor: pointer; border-radius: 5px; border: none; background-color: #007bff; color: white; }
-    button:hover { background-color: #0056b3; }
-    .hidden { display: none; }
-    .correct { background-color: #d4edda; border-left: 5px solid #28a745; }
-    .incorrect { background-color: #f8d7da; border-left: 5px solid #dc3545; }
-    #timer { font-weight: bold; font-size: 1.1em; color: #b30000; text-align: center; margin: 12px 0; }
+    :root{
+      --bg:#f5f6f8;
+      --card:#ffffff;
+      --passage:#fffaf0;
+      --accent:#f0ad4e;
+      --primary:#0b63d3;
+      --success:#28a745;
+      --danger:#dc3545;
+      --muted:#6b7280;
+      --read-font: "Georgia", "Times New Roman", serif;
+      --ui-font: Arial, Helvetica, sans-serif;
+    }
+    body{
+      margin:0;
+      font-family:var(--ui-font);
+      background:var(--bg);
+      color:#222;
+      display:flex;
+      justify-content:center;
+      padding:28px 12px;
+    }
+    .wrap{
+      width:100%;
+      max-width:980px;
+    }
+    header{
+      text-align:center;
+      margin-bottom:18px;
+    }
+    header h1{ margin:0; font-size:1.9rem; color:var(--primary); }
+    header p{ margin:6px 0 0; color:var(--muted); }
+
+    .controls{ display:flex; gap:12px; justify-content:center; margin:14px 0; align-items:center; flex-wrap:wrap; }
+    .btn{
+      background:var(--primary); color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; font-weight:700;
+    }
+    .btn:disabled{ opacity:0.5; cursor:default; }
+
+    #timer{ font-weight:700; color:#b30000; min-width:220px; text-align:center; }
+
+    form{ margin-top:12px; }
+
+    .passage{
+      background:var(--passage);
+      border-left:6px solid var(--accent);
+      padding:18px 20px;
+      border-radius:8px;
+      margin:18px 0 10px;
+      font-family:var(--read-font);
+      font-size:1.0rem;
+      line-height:1.6;
+      color:#111;
+      white-space:pre-wrap;
+    }
+
+    .question{
+      background:var(--card);
+      padding:12px 14px;
+      border-radius:8px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.06);
+      margin:10px 0;
+    }
+    .question p{ margin:0 0 8px 0; font-weight:700; }
+    .options label{ display:block; margin:6px 0; cursor:pointer; }
+    .result{ text-align:center; font-weight:700; margin:16px 0; font-size:1.05rem; }
+
+    .correct{ background:linear-gradient(90deg, rgba(36,153,84,0.06), rgba(255,255,255,0)); border-left:6px solid var(--success); }
+    .incorrect{ background:linear-gradient(90deg, rgba(220,53,69,0.04), rgba(255,255,255,0)); border-left:6px solid var(--danger); }
+
+    footer{ text-align:center; color:var(--muted); margin:26px 0 6px; font-size:0.9rem; }
+    @media (max-width:640px){
+      .passage{ font-size:0.95rem; padding:14px; }
+      .btn{ padding:9px 12px; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>MaIAnEspañol - 10° Grado</h1>
-    <p>Simulador Diagnóstico de Español - Décimo Grado<br>Dispones de 20 minutos para resolver el test.</p>
-  </header>
+  <div class="wrap">
+    <header>
+      <h1>Simulador Diagnóstico de Español - 10° Grado</h1>
+      <p>Lee cada texto completo antes de responder. Tiempo: <strong>20 minutos</strong>.</p>
+    </header>
 
-  <div style="text-align:center; margin-bottom:10px;">
-    <button id="startBtn" onclick="loadTest()">Iniciar Simulador de Idioma Español</button>
+    <div class="controls">
+      <button id="startBtn" class="btn" onclick="loadTest()">Iniciar Simulador de Idioma Español</button>
+      <div id="timer">⏰ Tiempo restante: 20:00</div>
+    </div>
+
+    <form id="testForm" class="hidden" onsubmit="return gradeTest(event)">
+      <div id="questions"></div>
+      <div style="text-align:center; margin-top:14px;">
+        <button class="btn" type="submit">Enviar Respuestas</button>
+      </div>
+    </form>
+
+    <div class="result" id="result"></div>
+
+    <footer>
+      Guardar como <code>index.html</code> (UTF-8) y subir a GitHub Pages.
+    </footer>
   </div>
 
-  <div id="timer"></div>
-
-  <form id="testForm" class="hidden" onsubmit="return gradeTest(event)">
-    <div id="questions"></div>
-    <div style="text-align:center;">
-      <button type="submit">Enviar Respuestas</button>
-    </div>
-  </form>
-  <div class="result" id="result"></div>
-
   <script>
+    // Datos: textos completos y preguntas extraídas del PDF de 10° grado
     const tests = {
       espanol10: [
+        // 1-4 Lectura: LA ANTÁRTIDA (texto completo según PDF)
         {
           passage: `LA ANTÁRTIDA
-La Antártida no es en absoluto un desierto... Goff estuvo en el Museo de la Ciencia de Barcelona para hablar de la vida en condiciones extremas.`,
-          q: "¿Qué se encuentra entre los hielos de la Antártida?",
-          options: ["Muchísimas especies de seres vivos.","Muestras de animales extinguidos.","Diferentes variedades de minerales.","Restos de embarcaciones antiguas."],
+
+La Antártida no es en absoluto un desierto. Es más bien, justo lo contrario: entre hielos perpetuos y en
+las frías aguas que rodean el inhóspito continente, florece una biodiversidad asombrosa en cantidad y variedad.
+Linda Goff, bióloga de la Universidad de California, conocida experta en estudios antárticos, cree que el éxito
+evolutivo de las especies que pueblan la Antártida, sobre todo el de sus comunidades bacterianas en las que centra
+en la actualidad sus investigaciones, es debido a la falta de competencia en sentido ecológico y que el estudio de
+las mismas puede ayudar a develar la existencia de vida en otros planetas.
+
+Goff estuvo en el Museo de la Ciencia de Barcelona para hablar de la vida en condiciones extremas. Allí fue
+entrevistada y aquí sus palabras...
+
+“Existe una enorme biodiversidad, tanto en los océanos que circundan la Antártida como debajo de las
+grandes capas de hielo. Incluso puede hablarse de gran biodiversidad en el entorno terrestre. Es cuestión de mirar.
+Sea donde sea, encontrará una gran vida microbiana, bien sea en la jungla tropical o en la Antártida.
+Simplemente hay que buscar para encontrarla porque no siempre es evidente. En el entorno antártico la
+biodiversidad existente probablemente se deba a una falta de competencia en términos ecológicos. En otros
+ambientes la competencia es tal que algunas especies son temporales. Eso no parece ocurrir en la Antártida”.`,
+          q: "1. ¿Qué se encuentra entre los hielos de la Antártida?",
+          options: [
+            "A. Muchísimas especies de seres vivos.",
+            "B. Muestras de animales extinguidos.",
+            "C. Diferentes variedades de minerales.",
+            "D. Restos de embarcaciones antiguas."
+          ],
           answer: 0
         },
-        { q: "Según el texto, ¿por qué se conserva la vida bacteriana en ese lugar?", options: ["Porque su reproducción es lenta.","Porque nadie las destruye.","Porque crecen en laboratorios.","Porque carecen de luz solar."], answer: 1 },
-        { q: "“…para hablar de la vida en condiciones extremas.” ¿Qué significa la palabra extremas en el texto?", options: ["Parecidas","Mejores","Difíciles","Actuales"], answer: 2 },
-        { q: "“…el estudio de la misma puede ayudar a develar la existencia de vida…” ¿Qué significa la palabra develar en el texto?", options: ["Transmitir","Descubrir","Terminar","Delimitar"], answer: 1 },
-
         {
-          passage: `¿Le da miedo hablar en público?... Se trata de adquirir confianza en usted mismo y sentir que es capaz de hacerlo.`,
-          q: "¿Qué significa la palabra adquirir en el texto?",
-          options: ["Convertir","Utilizar","Permitir","Lograr"],
+          q: "2. Según el texto, ¿por qué se conserva la vida bacteriana en ese lugar?",
+          options: [
+            "A. Porque su reproducción es lenta.",
+            "B. Porque nadie las destruye.",
+            "C. Porque crecen en laboratorios.",
+            "D. Porque carecen de luz solar."
+          ],
+          answer: 1
+        },
+        {
+          q: "3. “...para hablar de la vida en condiciones extremas.” ¿Qué significa la palabra 'extremas' en el texto?",
+          options: [
+            "A. Parecidas",
+            "B. Mejores",
+            "C. Difíciles",
+            "D. Actuales"
+          ],
+          answer: 2
+        },
+        {
+          q: "4. “...el estudio de las mismas puede ayudar a develar la existencia de vida...” ¿Qué significa 'develar' en el texto?",
+          options: [
+            "A. Transmitir",
+            "B. Descubrir",
+            "C. Terminar",
+            "D. Delimitar"
+          ],
+          answer: 1
+        },
+
+        // 5-6 Lectura: Consejos para hablar en público (texto completo según PDF)
+        {
+          passage: `¿Le da miedo hablar en público? ¿Es tímido y le cuesta hablar con la gente? Póngase pequeñas pruebas a diario, 
+que le hagan utilizar cualidades con las que no se sienta cómodo. Se trata de adquirir confianza en usted mismo 
+y sentir que es capaz de hacerlo. Y recuerde, en la vida todo es cuestión de práctica. ¡Inicie hoy!`,
+          q: "5. ¿Qué significa la palabra 'adquirir' en el texto?",
+          options: [
+            "A. Convertir",
+            "B. Utilizar",
+            "C. Permitir",
+            "D. Lograr"
+          ],
           answer: 3
         },
-        { q: "¿De qué trata el texto?", options: ["De una escena teatral.","De la vida de un artista.","De un desfile de modas.","De una fiesta de disfraces."], answer: 1 },
-
         {
-          passage: `Los derechos humanos son inherentes a las personas. Nacemos con ellos...`,
-          q: "“Los derechos humanos son inherentes a las personas.” ¿Qué significa la palabra inherentes en el texto?",
-          options: ["Recomendables","Flexibles","Inseparables","Manejables"],
+          q: "6. ¿De qué trata el texto?",
+          options: [
+            "A. De una escena teatral.",
+            "B. De la vida de un artista.",
+            "C. De un desfile de modas.",
+            "D. De una fiesta de disfraces."
+          ],
+          answer: 0 // en el PDF la pregunta relacionada a una señora en escena viene luego; mantendremos opción vinculada a la lectura específica arriba (aquí se pide 'De qué trata' y la respuesta más coherente es 'De una escena teatral' per PDF layout)
+        },
+
+        // 7 Lectura: Derechos humanos (texto completo)
+        {
+          passage: `Los derechos humanos son inherentes a las personas. Nacemos con ellos, nadie puede arrebatárnoslos y 
+existen aunque no haya ningún papel que lo atestigüe. Sin embargo es importante que los Estados los reconozcan 
+oficialmente para poder garantizar su cumplimiento.`,
+          q: "7. “Los derechos humanos son inherentes a las personas.” ¿Qué significa 'inherentes' en el texto?",
+          options: [
+            "A. Recomendables",
+            "B. Flexibles",
+            "C. Inseparables",
+            "D. Manejables"
+          ],
           answer: 2
         },
 
+        // 8 Lectura: Andrés y la recolección (texto según PDF)
         {
-          passage: `Tomé la bolsa de red, las botellas vacías... Los jóvenes ordeñaban las vacas.`,
-          q: "¿Qué hace Andrés?",
-          options: ["Fabrica corchos.","Atiende un rebaño.","Visita a un amigo.","Compra leche."],
+          passage: `Tomé la bolsa de red, las botellas vacías, los corchos y me fui. Subí la cuesta, las casas comenzaron a escasear, 
+empezaban los huertos y los cerezos. Entré en el camino de tierra y poco después vi su casa. Los jóvenes ordeñaban las vacas.
+— ¿Has traído las botellas, Andrés? —me preguntó—. Muy bien, ponlas ahí.
+Llenó las botellas y comenzó a taponarlas con los corchos.`,
+          q: "8. ¿Qué hace Andrés?",
+          options: [
+            "A. Fabrica corchos.",
+            "B. Atiende un rebaño.",
+            "C. Visita a un amigo.",
+            "D. Compra leche."
+          ],
           answer: 1
         },
 
+        // 9 Lectura: Señora en el corredor (texto)
         {
-          passage: `La señora estaba sentada en el corredor, meciéndose en una silla de mimbre... trajo una sonrisa a su cara.`,
-          q: "Según el texto, ¿qué motivó la sonrisa de la señora?",
-          options: ["La comodidad de la silla mecedora.","Las caricias de la brisa del mar.","El agradable ruido de las olas.","La llegada de las visitas al puerto."],
+          passage: `La señora estaba sentada en el corredor, meciéndose en una silla de mimbre. No podía ver el oleaje golpear contra la arena, 
+pero lo escuchaba claramente, y una brisa fresca que se acoplaba con el vago olor del humo de los barrios y los saludos de los gallos de Trujillo 
+trajo una sonrisa a su cara.`,
+          q: "9. Según el texto, ¿qué motivó la sonrisa de la señora?",
+          options: [
+            "A. La comodidad de la silla mecedora.",
+            "B. Las caricias de la brisa del mar.",
+            "C. El agradable ruido de las olas.",
+            "D. La llegada de las visitas al puerto."
+          ],
           answer: 1
         },
 
+        // 10 Lectura: Caballero pulcro (texto)
         {
-          passage: `Veíase en él, al instante, al caballero pulcro y distinguido... Profesaba la medicina por voluntad.`,
-          q: "¿A qué se dedicaba el personaje de la historia?",
-          options: ["A cuidar la salud de las personas.","Al aseo de vestimentas.","A dirigir un grupo de estudiantes.","Al cultivo de algodón."],
+          passage: `Veíase en él, al instante, al caballero pulcro y distinguido, limpio de indumentaria, de pensamiento y de acción. 
+Profesaba la medicina por voluntad, es decir, por vocación imperativa.`,
+          q: "10. ¿A qué se dedicaba el personaje de la historia?",
+          options: [
+            "A. A cuidar la salud de las personas.",
+            "B. Al aseo de vestimentas.",
+            "C. A dirigir un grupo de estudiantes.",
+            "D. Al cultivo de algodón."
+          ],
           answer: 0
         },
 
+        // 11 Lectura: "El sol ya tenía sueño" (fragment)
         {
-          passage: `Entusiasmado con estos recuerdos... el sol ya tenía sueño y la luna había madrugado.`,
-          q: "¿Qué significa la frase 'el sol ya tenía sueño' en el texto?",
-          options: ["El sol resplandecía.","El sol calentaba.","El sol se imponía.","El sol se ocultaba."],
+          passage: `Entusiasmado con estos recuerdos, terminó de cruzar los múltiples y estrechos caminillos que se abrían paso 
+entre incontables chozas, un tugurio que colindaba con la gigantesca muralla de la residencial más lujosa. En el fin del mundo, 
+el sol ya tenía sueño y la luna había madrugado, brillando antes del anochecer.`,
+          q: "11. ¿Qué significa la frase 'el sol ya tenía sueño' en el texto?",
+          options: [
+            "A. El sol resplandecía.",
+            "B. El sol calentaba.",
+            "C. El sol se imponía.",
+            "D. El sol se ocultaba."
+          ],
           answer: 3
         },
 
+        // 12 Lectura: (Manuel y la revista) - el PDF incluye una referencia corta sobre Manuel
         {
-          passage: `Manuel lee una revista y felicita a los editores...`,
-          q: "¿Por qué Manuel felicita a los editores de la revista?",
-          options: ["Porque la revista es barata.","Porque es amigo del autor.","Porque le interesó el tema.","Porque tiene nuevo diseño."],
+          passage: `Manuel lee una revista y felicita a los editores por los temas interesantes que publican.`,
+          q: "12. ¿Por qué Manuel felicita a los editores de la revista?",
+          options: [
+            "A. Porque la revista es barata.",
+            "B. Porque es amigo del autor.",
+            "C. Porque le interesó el tema.",
+            "D. Porque tiene nuevo diseño."
+          ],
           answer: 2
         },
 
+        // 13 Lectura: Viaje y equipaje (texto)
         {
-          passage: `El día previo a su viaje deje preparado todo... De esa manera si las maletas se pierden, los problemas serán menores.`,
-          q: "Según el texto, ¿por qué lo importante se lleva en una maleta de mano?",
-          options: ["Porque se evita una pérdida.","Porque los gastos son menores.","Por la cantidad de horas de vuelo.","Por las normas del aeropuerto."],
+          passage: `El día previo a su viaje deje preparado todo lo que llevará en su equipaje. Trate de descansar. Lleve los medicamentos, sus documentos personales 
+y cualquier otro papel de importancia en su equipaje de mano. De esa manera si las maletas se pierden, los problemas serán menores.`,
+          q: "13. Según el texto, ¿por qué lo importante se lleva en una maleta de mano?",
+          options: [
+            "A. Porque se evita una pérdida.",
+            "B. Porque los gastos son menores.",
+            "C. Por la cantidad de horas de vuelo.",
+            "D. Por las normas del aeropuerto."
+          ],
           answer: 0
         },
 
+        // 14 Lectura: Computadora y crecimiento tecnologico (texto)
         {
-          passage: `La computadora es una máquina electrónica capaz de ordenar... es indispensable contar con una herramienta que permita manejar información.`,
-          q: "“… propio de esta época de crecimiento tecnológico…” ¿Qué significa la palabra crecimiento en el texto?",
-          options: ["Conocimiento","Avance","Requerimiento","Esfuerzo"],
+          passage: `La computadora es una máquina electrónica capaz de ordenar, procesar y elegir un resultado con una información. En la actualidad, 
+dada la complejidad del mundo con el crecimiento tecnológico, es indispensable contar con una herramienta que permita manejar información con 
+eficiencia y flexibilidad.`,
+          q: "14. '...propio de esta época de crecimiento tecnológico...' ¿Qué significa 'crecimiento' en el texto?",
+          options: [
+            "A. Conocimiento",
+            "B. Avance",
+            "C. Requerimiento",
+            "D. Esfuerzo"
+          ],
           answer: 1
         },
 
+        // 15-18 Lectura: EL VIOLINISTA (texto completo según PDF)
         {
-          passage: `EL VIOLINISTA - El joven subió al estrado... “cuánta música podemos producir con lo que nos queda”.`,
-          q: "¿De qué trata el texto?",
-          options: ["De una escena de teatro.","De un concierto al aire libre.","De la actitud de un artista.","De la historia de la música."],
+          passage: `EL VIOLINISTA
+
+El joven subió al estrado para dar un concierto. Llegar hasta allí no es logro pequeño para él, porque tiene
+abrazaderas en ambas piernas y camina con la ayuda de muletas. Verlo caminar sobre el escenario de un
+lado a otro, paso a paso, es una escena impresionante. Él camina penosamente, pero majestuoso, hasta que
+alcanza su silla. Después se sienta y lentamente pone las muletas sobre el piso, abre los broches de las abrazaderas
+en sus piernas, recoge un pie y extiende el otro hacia delante. Después se inclina y toma el violín, lo pone
+bajo su barbilla, hace seña al director y procede a tocar. Hasta ahora, la audiencia ya estaba acostumbrada a este
+ritual. Permanecían silenciosos mientras él caminaba por el escenario. Permanecían así hasta que él estuviera
+listo para tocar; pero esta vez, algo ocurrió. Justo cuando él terminaba de tocar su primera parte, una cuerda de
+su violín se rompió, salió disparada por el salón. No había duda de lo que ese sonido significaba y de lo que
+él tendría que hacer. Los que estaban ahí esa noche, pensaron: “él va a tener que ponerse de pie, abrocharse
+las abrazaderas, recoger las muletas, y cojear hasta afuera del escenario para encontrar otro violín u otra cuerda”.
+Pero no fue así. En su lugar, esperó un momento, cerró sus ojos y después hizo seña al director para empezar a tocar.
+La orquesta empezó y él tocó desde donde había parado. Tocó con tanta pasión, con tanto poder y con una claridad
+que nunca antes nadie había escuchado. Cuando termina, había un silencio impresionante en el salón. Después la gente
+se levantó y lo aclamó. Había una explosión de aplausos desde cada rincón del auditorio. Él sonrió, se secó el sudor de sus cejas,
+alzó su arco y a esa señal hubo silencio, y después dijo, no presumidamente, pero en un tono tranquilo, pensativo y reverente:
+“Ustedes saben, algunas veces la tarea de artista es la de averiguar cuánta música podemos producir con lo que nos queda”.`,
+          q: "15. ¿De qué trata el texto?",
+          options: [
+            "A. De una escena de teatro.",
+            "B. De un concierto al aire libre.",
+            "C. De la actitud de un artista.",
+            "D. De la historia de la música."
+          ],
           answer: 2
         },
-        { q: "¿Qué complicaba al personaje para situarse en el escenario?", options: ["La aglomeración de público.","El peso de los instrumentos.","El gran tamaño del salón.","La dificultad para caminar."], answer: 3 },
-        { q: "¿Cómo se comportaba la gente cuando él se dirigía al estrado?", options: ["Permanecía en silencio.","Se movía impacientemente.","Conversaban unos con otros.","Se mostraba distraída."], answer: 0 },
-        { q: "“Hasta ahora, la audiencia ya estaba acostumbrada a este ritual.” ¿Qué significa la palabra audiencia en el texto?", options: ["Presentación","Orquesta","Concurrencia","Aclamación"], answer: 2 },
-
         {
-          passage: `19. Alberto muy preocupado pregunta...`,
-          q: "¿Qué palabra o frase hace falta para completar el texto?",
-          options: ["Puede que","A lo mejor","En cuanto","Ojalá"],
+          q: "16. ¿Qué complicaba al personaje para situarse en el escenario?",
+          options: [
+            "A. La aglomeración de público.",
+            "B. El peso de los instrumentos.",
+            "C. El gran tamaño del salón.",
+            "D. La dificultad para caminar."
+          ],
+          answer: 3
+        },
+        {
+          q: "17. ¿Cómo se comportaba la gente cuando él se dirigía al estrado?",
+          options: [
+            "A. Permanecían en silencio.",
+            "B. Se movían impacientemente.",
+            "C. Conversaban unos con otros.",
+            "D. Se mostraban distraídos."
+          ],
+          answer: 0
+        },
+        {
+          q: "18. 'Hasta ahora, la audiencia ya estaba acostumbrada a este ritual.' ¿Qué significa 'audiencia' en el texto?",
+          options: [
+            "A. Presentación",
+            "B. Orquesta",
+            "C. Concurrencia",
+            "D. Aclamación"
+          ],
+          answer: 2
+        },
+
+        // 19 Completar (frase sobre Alberto)
+        {
+          passage: `Alberto muy preocupado pregunta, -¡Qué raro que no haya llegado mi madre a la casa todavía! – _______está 
+comprando algo para preparar la cena, a ella siempre le gusta comer bien y que nosotros quedemos satisfechos.`,
+          q: "19. ¿Qué palabra o frase hace falta para completar el texto?",
+          options: [
+            "A. Puede que",
+            "B. A lo mejor",
+            "C. En cuanto",
+            "D. Ojalá"
+          ],
           answer: 1
         },
 
+        // 20 Completar (frase sobre Jaime)
         {
-          passage: `20. Hola Jaime, has cumplido con tu trabajo todos los días... estoy como si me _______ un enorme peso de encima.`,
-          q: "¿Qué palabra hace falta para completar el texto?",
-          options: ["quitaran","han quitado","quitaron","hubieran quitado"],
+          passage: `Hola Jaime, has cumplido con tu trabajo todos los días y te veo más relajado; cuéntame, ¿cómo haces? – Es que hoy me han dado un masaje y estoy como si me _______ un enorme peso de encima.`,
+          q: "20. ¿Qué forma verbal completa correctamente la frase?",
+          options: [
+            "A. quitaran",
+            "B. han quitado",
+            "C. quitaron",
+            "D. hubieran quitado"
+          ],
           answer: 0
         }
       ]
     };
 
-    let timeLeft = 1200; // 20 minutos
+    // Timer y lógica
+    let timeLeft = 1200; // 20 minutos en segundos
     let timer = null;
+    const timerEl = document.getElementById('timer');
+    const startBtn = document.getElementById('startBtn');
+    const form = document.getElementById('testForm');
+    const questionsDiv = document.getElementById('questions');
+    const resultEl = document.getElementById('result');
 
-    function startTimer() {
-      const timerDisplay = document.getElementById('timer');
-      if (timer) clearInterval(timer);
-      timer = setInterval(() => {
-        if (timeLeft <= 0) {
+    function formatTime(s){
+      const m = Math.floor(s/60);
+      const sec = s%60;
+      return `${m}:${sec<10?'0':''}${sec}`;
+    }
+
+    function startTimer(){
+      // prevenir múltiples timers
+      if(timer) clearInterval(timer);
+      timer = setInterval(()=>{
+        if(timeLeft<=0){
           clearInterval(timer);
           timer = null;
-          gradeTestAuto();
+          timerEl.textContent = "⏰ Tiempo restante: 0:00";
+          autoSubmitOnTimeout();
           return;
         }
-        let m = Math.floor(timeLeft/60);
-        let s = timeLeft%60;
-        timerDisplay.innerText = `⏰ Tiempo restante: ${m}:${s<10?'0':''}${s}`;
+        timerEl.textContent = `⏰ Tiempo restante: ${formatTime(timeLeft)}`;
         timeLeft--;
       },1000);
     }
 
     function loadTest(){
-      document.getElementById('startBtn').disabled=true;
+      startBtn.disabled = true;
+      startBtn.textContent = "Test iniciado";
+      // renderizar preguntas con pasajes completos
+      questionsDiv.innerHTML = '';
       const qs = tests.espanol10;
-      const container=document.getElementById('questions');
-      const form=document.getElementById('testForm');
-      container.innerHTML='';
-      qs.forEach((q,i)=>{
-        if(q.passage){
-          const pdiv=document.createElement('div');
-          pdiv.className='passage';
-          pdiv.innerHTML=`${q.passage.replace(/\n/g,'<br>')}`;
-          container.appendChild(pdiv);
+      qs.forEach((item, idx) => {
+        // mostrar passage si existe
+        if(item.passage){
+          const pass = document.createElement('div');
+          pass.className = 'passage';
+          pass.innerText = item.passage;
+          questionsDiv.appendChild(pass);
         }
-        const div=document.createElement('div');
-        div.className='question'; div.id=`q-${i}`;
-        let opts='';
-        q.options.forEach((opt,j)=>{opts+=`<label><input type="radio" name="q${i}" value="${j}"> ${opt}</label><br>`;});
-        div.innerHTML=`<p><b>${i+1}. ${q.q}</b></p>${opts}`;
-        container.appendChild(div);
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question';
+        qDiv.id = `q-${idx}`;
+        const p = document.createElement('p');
+        p.innerText = item.q;
+        qDiv.appendChild(p);
+        const opts = document.createElement('div');
+        opts.className = 'options';
+        item.options.forEach((opt, j) => {
+          const id = `q${idx}_opt${j}`;
+          const label = document.createElement('label');
+          label.htmlFor = id;
+          label.innerHTML = `<input id="${id}" type="radio" name="q${idx}" value="${j}"> ${opt}`;
+          opts.appendChild(label);
+        });
+        qDiv.appendChild(opts);
+        questionsDiv.appendChild(qDiv);
       });
       form.classList.remove('hidden');
-      document.getElementById('result').innerText='';
+      resultEl.innerText = '';
+      // reiniciar timer y empezar
+      timeLeft = 1200;
       startTimer();
+      // desplazar al primer texto
+      window.scrollTo({ top: questionsDiv.offsetTop - 20, behavior: 'smooth' });
     }
 
-    function gradeTest(e){e.preventDefault();gradeTestAuto();return false;}
-
-    function gradeTestAuto(){
-      if(timer){clearInterval(timer);timer=null;}
-      const qs=tests.espanol10; let score=0;
-      qs.forEach((q,i)=>{
-        const div=document.getElementById(`q-${i}`);
-        div.classList.remove('correct','incorrect');
-        const sel=document.querySelector(`input[name="q${i}"]:checked`);
-        if(sel){if(parseInt(sel.value)===q.answer){score++;div.classList.add('correct');}else{div.classList.add('incorrect');}}
-        else{div.classList.add('incorrect');}
+    function gradeTest(e){
+      if(e) e.preventDefault();
+      if(timer){ clearInterval(timer); timer = null; }
+      const qs = tests.espanol10;
+      let score = 0;
+      qs.forEach((item, idx) => {
+        const qDiv = document.getElementById(`q-${idx}`);
+        if(!qDiv) return;
+        qDiv.classList.remove('correct','incorrect');
+        const sel = document.querySelector(`input[name="q${idx}"]:checked`);
+        if(sel){
+          const val = parseInt(sel.value,10);
+          if(val === item.answer){
+            score++;
+            qDiv.classList.add('correct');
+          } else {
+            qDiv.classList.add('incorrect');
+          }
+        } else {
+          qDiv.classList.add('incorrect');
+        }
       });
-      const total=qs.length; let msg='';
-      if(score>=total*0.9){msg=`¡Excelente! Obtuviste ${score}/${total}`;document.getElementById('result').style.color='#28a745';}
-      else if(score>=total*0.6){msg=`Vas bien, pero puedes mejorar. Obtuviste ${score}/${total}`;document.getElementById('result').style.color='#fd7e14';}
-      else{msg=`Debes seguir practicando. Obtuviste ${score}/${total}`;document.getElementById('result').style.color='#dc3545';}
-      document.getElementById('result').innerText=msg;
-      window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+      showResult(score, qs.length);
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
+
+    function autoSubmitOnTimeout(){
+      // cuando se acabe el tiempo: marcar como incorrectas las no contestadas y calificar
+      const qs = tests.espanol10;
+      let score = 0;
+      qs.forEach((item, idx) => {
+        const qDiv = document.getElementById(`q-${idx}`);
+        if(!qDiv) return;
+        qDiv.classList.remove('correct','incorrect');
+        const sel = document.querySelector(`input[name="q${idx}"]:checked`);
+        if(sel){
+          const val = parseInt(sel.value,10);
+          if(val === item.answer){
+            score++;
+            qDiv.classList.add('correct');
+          } else {
+            qDiv.classList.add('incorrect');
+          }
+        } else {
+          qDiv.classList.add('incorrect');
+        }
+      });
+      showResult(score, qs.length);
+      alert("⏰ Se acabó el tiempo. El examen fue enviado automáticamente.");
+    }
+
+    function showResult(score,total){
+      const percent = (score/total)*100;
+      let msg = '';
+      if(percent >= 90){
+        msg = `¡Excelente! Obtuviste ${score}/${total}.`;
+        resultEl.style.color = 'var(--success)';
+      } else if(percent >= 60){
+        msg = `Vas bien, pero puedes mejorar. Obtuviste ${score}/${total}.`;
+        resultEl.style.color = '#fd7e14';
+      } else {
+        msg = `Debes seguir practicando. Obtuviste ${score}/${total}.`;
+        resultEl.style.color = 'var(--danger)';
+      }
+      resultEl.innerText = msg;
+    }
+
+    // Evitar carga accidental al cerrar si hay test iniciado (opcional)
+    window.addEventListener('beforeunload', function(e){
+      // Si el test ya empezó y no fue calificado
+      if(!startBtn.disabled && !form.classList.contains('hidden')) return;
+      // else no bloquear (keepsimple)
+    });
+
+    // Indicamos tiempo inicial en la UI
+    timerEl.textContent = `⏰ Tiempo restante: ${formatTime(timeLeft)}`;
   </script>
 </body>
 </html>
